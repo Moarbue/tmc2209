@@ -121,6 +121,42 @@ tmc2209_direction tmc2209_get_direction(tmc2209_t *s)
     return s->dir; 
 }
 
+void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
+{
+    if (s == NULL) return;
+
+    tmc2209_set_direction(s, dir);
+    s->step  = 0;
+    s->steps = steps;
+}
+
+void tmc2209_rotate(tmc2209_t *s, int32_t degree)
+{
+    if (s == NULL) return;
+
+    uint32_t steps;
+    tmc2209_direction dir;
+
+    steps = (abs(degree) * s->steps_per_revolution * s->microsteps) / 360;
+    dir   = (dir > 0) // shortcut because clockwise = 1, counterclockwise = 0
+
+    tmc2209_step(s, steps, dir);
+}
+
+void tmc2209_update(tmc2209_t *s)
+{
+    if (s == NULL) return;
+
+    if (s->step < s->steps) {
+        s->step++;
+
+        digitalWrite(s->step_pin, HIGH);
+        delayMicroseconds(s->step_delay);
+        digitalWrite(s->step_pin, LOW);
+        delayMicroseconds(s->step_delay);
+    }
+}
+
 
 // helper functions definition
 
