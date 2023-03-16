@@ -8,12 +8,12 @@ extern "C" {
 #endif
 
 typedef enum {
-    TMC2209_ADRESS_0  = 0x0b00,
-    TMC2209_ADRESS_1  = 0x0b01,
-    TMC2209_ADRESS_2  = 0x0b10,
-    TMC2209_ADRESS_3  = 0x0b11,
-    TMC2209_NO_ADRESS = 0xFFFF,
-} tmc2209_adress;
+    TMC2209_ADDRESS_0  = 0x0b00,
+    TMC2209_ADDRESS_1  = 0x0b01,
+    TMC2209_ADDRESS_2  = 0x0b10,
+    TMC2209_ADDRESS_3  = 0x0b11,
+    TMC2209_NO_ADDRESS = 0xFFFF,
+} tmc2209_address;
 
 typedef enum {
     TMC2209_MICROSTEPS_8  = 8,
@@ -49,10 +49,10 @@ typedef struct {
     uint8_t step_pin;   // step-pulsing
     uint8_t rx_pin;     // UART
     uint8_t tx_pin;     // UART
-    uint8_t ms1_pin;    // microstep/adress LSB
-    uint8_t ms2_pin;    // microstep/adress MSB
+    uint8_t ms1_pin;    // microstep/address LSB
+    uint8_t ms2_pin;    // microstep/address MSB
 
-    tmc2209_adress    adress;               // adress for UART (see enum)
+    tmc2209_address    address;               // address for UART (see enum)
     tmc2209_microstep microsteps;           // divisor for single step (see enum)
     tmc2209_direction dir;                  // spinning direction of the motor
     uint32_t          step_delay;           // delay in µs between one low/high pulse
@@ -65,7 +65,7 @@ typedef struct {
 // initialize the driver, both interfaces
 void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
-                                      tmc2209_adress adress);
+                                      tmc2209_address address);
 
 // set the microsteps of the driver
 void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps);

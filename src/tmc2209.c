@@ -4,11 +4,11 @@ static bool serial_initialized = false;
 HardwareSerial s_serial(TMC2209_DEFAULT_SERIAL);
 
 // helper functions declaration
-void set_adress(tmc2209_t *s, tmc2209_adress adress);
+void set_address(tmc2209_t *s, tmc2209_address address);
 
 void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
-                                      tmc2209_adress adress)
+                                      tmc2209_address address)
 {
     if (s == NULL) return;
 
@@ -22,7 +22,7 @@ void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     s->ms1_pin              = ms1_pin;
     s->ms2_pin              = ms2_pin;
 
-    s->adress               = adress;
+    s->address               = address;
     s->microsteps           = TMC2209_DEFAULT_MICROSTEPS;
     s->dir                  = TMC2209_CW;
     s->step_delay           = TMC2209_DEFAULT_STEP_DELAY;
@@ -160,27 +160,27 @@ void tmc2209_update(tmc2209_t *s)
 
 // helper functions definition
 
-void set_adress(tmc2209_t *s, tmc2209_adress adress)
+void set_address(tmc2209_t *s, tmc2209_address address)
 {
-    switch (adress) {
-        case TMC2209_ADRESS_0:
+    switch (address) {
+        case TMC2209_ADDRESS_0:
             digitalWrite(s->ms1_pin, LOW);
             digitalWrite(s->ms2_pin, LOW);
         break;
-        case TMC2209_ADRESS_1:
+        case TMC2209_ADDRESS_1:
             digitalWrite(s->ms1_pin, HIGH);
             digitalWrite(s->ms2_pin, LOW);
         break;
-        case TMC2209_ADRESS_2:
+        case TMC2209_ADDRESS_2:
             digitalWrite(s->ms1_pin, LOW);
             digitalWrite(s->ms2_pin, HIGH);
         break;
-        case TMC2209_ADRESS_3:
+        case TMC2209_ADDRESS_3:
             digitalWrite(s->ms1_pin, HIGH);
             digitalWrite(s->ms2_pin, HIGH);
         break;
         default:
             // TODO: Implement Error Reporting
-            assert(false && "Wrong Adress specified!");
+            assert(false && "Wrong address specified!");
     }
 }
