@@ -1,10 +1,20 @@
 #include "tmc2209.h"
 
+typedef enum {
+    TMC2209_MASK_WRITE = 0x80,
+    TMC2209_MASK_READ  = 0x00,
+    TMC2209_MASK_SYNC  = 0x05,
+} tmc2209_mask;
+
+#define REPLY_DELAY 2 // ms
+
 static bool serial_initialized = false;
 HardwareSerial s_serial(TMC2209_DEFAULT_SERIAL);
 
 // helper functions declaration
 void set_address(tmc2209_t *s, tmc2209_address address);
+void register_write(tmc2209_t *s, uint8_t address, uint32_t val);
+uint8_t calc_crc(uint8_t datagram[], uint8_t len);
 
 void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
@@ -183,4 +193,49 @@ void set_address(tmc2209_t *s, tmc2209_address address)
             // TODO: Implement Error Reporting
             assert(false && "Wrong address specified!");
     }
+}
+
+void register_write(tmc2209_t *s, uint8_t address, uint32_t val)
+{
+    while (s_serial.available() > 0) s_serial.read();
+
+    address |= TMC2209_MASK_WRITE;
+
+    uint8_t len = 8;
+    uint8_t datagram[len] = {
+        TMC2209_MASK_SYNC,  // sync byte
+        s->address,         // slave address
+        address,            // register address with write flag
+        (val >> 24) & 0xFF, // data bit 1 (MSB)
+        (val >> 16) & 0xFF, // data bit 2
+        (val >>  8) & 0xFF, // data bit 3
+        (val >>  0) & 0xFF, // data bit 4 (LSB)
+        0x00,               // placeholder for crc
+    };
+
+    datagram[len - 1] = calc_crc(datagram, len - 1); // leave out placeholder for crc calculation
+
+    for (uint8_t i = 0; i < len; ++i) {
+        s_serial.write(datagram[i]);
+    }
+
+    delay(REPLY_DELAY);
+}
+
+uint8_t calc_crc(uint8_t datagram[], uint8_t len)
+{
+    uint8_t crc = 0;
+	for (uint8_t i = 0; i < len; ++i) {
+		uint8_t current = datagram[i];
+		for (uint8_t j = 0; j < 8; ++j) {
+			if ((crc >> 7) ^ (current & 0x01)) {
+				crc = (crc << 1) ^ 0x07;
+			} else {
+				crc = (crc << 1);
+			}
+			crc &= 0xFF;
+			current = current >> 1;
+		}
+	}
+	return crc;
 }
