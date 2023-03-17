@@ -50,6 +50,8 @@ void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     pinMode(s->ms1_pin,  OUTPUT);
     pinMode(s->ms2_pin,  OUTPUT);
 
+    set_address(s, address);
+
     // initialize UART
     if (serial_initialized) return;
     s_serial.begin(115200, SERIAL_8N1, s->rx_pin, s->tx_pin);
