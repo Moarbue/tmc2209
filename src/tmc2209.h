@@ -52,7 +52,7 @@ typedef struct {
     uint8_t ms1_pin;    // microstep/address LSB
     uint8_t ms2_pin;    // microstep/address MSB
 
-    tmc2209_address    address;               // address for UART (see enum)
+    tmc2209_address   address;              // address for UART (see enum)
     tmc2209_microstep microsteps;           // divisor for single step (see enum)
     tmc2209_direction dir;                  // spinning direction of the motor
     uint32_t          step_delay;           // delay in µs between one low/high pulse
