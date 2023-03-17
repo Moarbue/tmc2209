@@ -150,7 +150,7 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     tmc2209_direction dir;
 
     steps = (abs(degree) * s->steps_per_revolution * s->microsteps) / 360;
-    dir   = (dir > 0) // shortcut because clockwise = 1, counterclockwise = 0
+    dir   = (dir > 0) ? TMC2209_CW : TMC2209_CCW;
 
     tmc2209_step(s, steps, dir);
 }
@@ -205,14 +205,14 @@ void register_write(tmc2209_t *s, uint8_t address, uint32_t val)
 
     uint8_t len = 8;
     uint8_t datagram[len] = {
-        TMC2209_MASK_SYNC,  // sync byte
-        s->address,         // slave address
-        address,            // register address with write flag
-        (val >> 24) & 0xFF, // data bit 1 (MSB)
-        (val >> 16) & 0xFF, // data bit 2
-        (val >>  8) & 0xFF, // data bit 3
-        (val >>  0) & 0xFF, // data bit 4 (LSB)
-        0x00,               // placeholder for crc
+        TMC2209_MASK_SYNC,              // sync byte
+        (uint8_t) s->address,           // slave address
+        address,                        // register address with write flag
+        (uint8_t) ((val >> 24) & 0xFF), // data bit 1 (MSB)
+        (uint8_t) ((val >> 16) & 0xFF), // data bit 2
+        (uint8_t) ((val >>  8) & 0xFF), // data bit 3
+        (uint8_t) ((val >>  0) & 0xFF), // data bit 4 (LSB)
+        0x00,                           // placeholder for crc
     };
 
     datagram[len - 1] = calc_crc(datagram, len - 1); // leave out placeholder for crc calculation
