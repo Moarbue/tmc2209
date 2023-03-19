@@ -7,7 +7,12 @@
 extern "C" {
 #endif
 
-#define TMC2209_REGISTER_SET_VAL(register, setting, val) ((register) |=  (val << setting))
+#define TMC2209_REGISTER_CLR(register, pos, bits) ((register) &= ~(((1 << (bits)) - 1) << pos))
+#define TMC2209_REGISTER_SET(register, pos, bits) ((register) |=  (((1 << (bits)) - 1) << pos))
+#define TMC2209_REGISTER_VAL(register, pos, bits, val) do { \
+        TMC2209_REGISTER_CLR(register, pos, bits);          \
+        (register) |= ((val) << (pos));                     \
+    } while (0)
 
 // GCONF settings
 typedef uint16_t GCONF_t;
