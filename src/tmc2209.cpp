@@ -10,6 +10,8 @@ typedef enum {
 #define READ_TIMEOUT 5 // ms
 #define READ_MAX_RETRIES 2
 
+#define TOFF_DEFAULT 3
+
 static bool serial_initialized = false;
 HardwareSerial s_serial(TMC2209_DEFAULT_SERIAL);
 
@@ -19,11 +21,11 @@ void register_write(tmc2209_t *s, uint8_t address, uint32_t val);
 uint32_t register_read(tmc2209_t *s, uint8_t address);
 uint8_t calc_crc(uint8_t datagram[], uint8_t len);
 
-void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
+bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
                                       tmc2209_address address)
 {
-    if (s == NULL) return;
+    if (s == NULL) return false;
 
     memset(s, 0, sizeof (*s));
 
@@ -52,13 +54,21 @@ void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     pinMode(s->step_pin, OUTPUT);
     pinMode(s->ms1_pin,  OUTPUT);
     pinMode(s->ms2_pin,  OUTPUT);
+    // enable driver
+    digitalWrite(s->en_pin, LOW);
 
     set_address(s, address);
 
     // initialize UART
-    if (serial_initialized) return;
-    s_serial.begin(115200, SERIAL_8N1, s->rx_pin, s->tx_pin);
-    serial_initialized = true;
+    if (!serial_initialized) {
+        s_serial.begin(115200, SERIAL_8N1, s->rx_pin, s->tx_pin);
+        serial_initialized = true;
+    }
+
+    TMC2209_REGISTER_SET(s->gconf, GCONF_PDN_DISABLE, 1);
+    TMC2209_REGISTER_SET(s->gconf, GCONF_MSTEP_REG_SELECT, 1);
+    register_write(s, GCONF_ADRESS, s->gconf);
+    return (s->communicating = check_connection(s));
 }
 
 void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
@@ -72,7 +82,7 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
 
     s->microsteps = microsteps;
 
-    if (serial_initialized) {
+    if (s->communicating) {
         // TODO: set microsteps via UART
     } else {
         switch (s->microsteps) {
@@ -123,7 +133,7 @@ void tmc2209_set_direction(tmc2209_t *s, tmc2209_direction dir)
 
     if (dir != TMC2209_CW || dir != TMC2209_CCW) return;
 
-    if (serial_initialized) {
+    if (s->communicating) {
         // TODO: Implement setting direction via UART
     } else 
         digitalWrite(s->dir_pin, s->dir);
@@ -172,6 +182,44 @@ void tmc2209_update(tmc2209_t *s)
     }
 }
 
+void tmc2209_disable(tmc2209_t *s)
+{
+    if (s == NULL) return;
+
+    if (s->communicating) {
+        TMC2209_REGISTER_CLR(s->chopconf, CHOPCONF_TOFF, 4);
+        register_write(s, CHOPCONF_ADDRESS, s->chopconf);
+    }
+
+    digitalWrite(s->en_pin, HIGH);
+}
+
+void tmc2209_enable(tmc2209_t *s)
+{
+    if (s == NULL) return;
+
+    if (s->communicating) {
+        TMC2209_REGISTER_VAL(s->chopconf, CHOPCONF_TOFF, 4, TOFF_DEFAULT);
+        register_write(s, CHOPCONF_ADDRESS, s->chopconf);
+    }
+
+    digitalWrite(s->en_pin, LOW);
+}
+
+bool check_connection(tmc2209_t * s)
+{
+    s->gconf = register_read(s, GCONF_ADRESS) & GCONF_BIT_MASK;
+    return (s->gconf >> GCONF_PDN_DISABLE) & 0x1;
+}
+
+void tmc2209_toff(tmc2209_t *s, uint8_t val)
+{
+    if (s == NULL) return;
+
+    if (s->communicating) {
+        TMC2209_REGISTER_VAL(s->chopconf, CHOPCONF_TOFF, 4, val & 0xF);
+    }
+}
 
 // helper functions definition
 

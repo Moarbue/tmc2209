@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#include "registers.h"
+
 typedef enum {
     TMC2209_ADDRESS_0  = 0x0b00,
     TMC2209_ADDRESS_1  = 0x0b01,
@@ -60,10 +62,37 @@ typedef struct {
 
     uint32_t step;   // current steps (for STEP/DIR interface)
     uint32_t steps;  // final steps (for STEP/DIR interface)
+
+    bool communicating;
+    // registers
+    GCONF_t        gconf;
+    GSTAT_t        gstat;
+    IFCNT_t        ifcnt;
+    SLAVECONF_t    slaveconf;
+    OTP_PROG_t     otp_prog;
+    OTP_READ_t     otp_read;
+    IOIN_t         ioin;
+    FACTORY_CONF_t factory_conf;
+    IHOLD_IRUN_t   ihold_irun;
+    TPOWERDOWN_t   tpowerdown;
+    TSTEP_t        tstep;
+    TPWMTHRS_t     tpwmthrs;
+    VACTUAL_t      vactual;
+    TCOOLTHRS_t    tcoolthrs;
+    SGTHRS_t       sgthrs;
+    SG_RESULT_t    sg_result;
+    COOLCONF_t     coolconf;
+    MSCNT_t        mscnt;
+    MSCURACT_t     mscuract;
+    CHOPCONF_t     chopconf;
+    DRV_STATUS_t   drv_status;
+    PWMCONF_t      pwmconf;
+    PWM_SCALE_t    pwm_scale;
+    PWM_AUTO_t     pwm_auto;
 } tmc2209_t;
 
 // initialize the driver, both interfaces
-void tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
+bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
                                       tmc2209_address address);
 
@@ -94,6 +123,17 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree);
 // all functions are non blocking, therefore call update function every loop iteration
 void tmc2209_update(tmc2209_t *s);
 
+// disable the driver
+void tmc2209_disable(tmc2209_t *s);
+
+// enable the driver
+void tmc2209_enable(tmc2209_t *s);
+
+// Check UART connection with the driver
+bool check_connection(tmc2209_t * s);
+
+// toff time 0..15
+void tmc2209_toff(tmc2209_t *s, uint8_t val);
 
 #ifdef __cplusplus
 } // extern "C"
