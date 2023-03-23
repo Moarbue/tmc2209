@@ -29,46 +29,46 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
 
     memset(s, 0, sizeof (*s));
 
-    s->en_pin               = en_pin;
-    s->dir_pin              = dir_pin;
-    s->step_pin             = step_pin;
-    s->rx_pin               = rx_pin;
-    s->tx_pin               = tx_pin;
-    s->ms1_pin              = ms1_pin;
-    s->ms2_pin              = ms2_pin;
+    s->_en_pin               = en_pin;
+    s->_dir_pin              = dir_pin;
+    s->_step_pin             = step_pin;
+    s->_rx_pin               = rx_pin;
+    s->_tx_pin               = tx_pin;
+    s->_ms1_pin              = ms1_pin;
+    s->_ms2_pin              = ms2_pin;
 
-    s->address               = address;
-    s->microsteps           = TMC2209_DEFAULT_MICROSTEPS;
-    s->dir                  = TMC2209_CW;
-    s->step_delay           = TMC2209_DEFAULT_STEP_DELAY;
-    s->steps_per_revolution = TMC2209_DEFAULT_STEPS_PER_REVOLUTION;
+    s->_address               = address;
+    s->_microsteps           = TMC2209_DEFAULT_MICROSTEPS;
+    s->_dir                  = TMC2209_CW;
+    s->_step_delay           = TMC2209_DEFAULT_STEP_DELAY;
+    s->_steps_per_revolution = TMC2209_DEFAULT_STEPS_PER_REVOLUTION;
 
-    s->step                 = 0;
-    s->steps                = 0;
+    s->_step                 = 0;
+    s->_steps                = 0;
 
-    pinMode(s->en_pin, OUTPUT);
+    pinMode(s->_en_pin, OUTPUT);
     // disable driver
-    digitalWrite(s->en_pin, HIGH);
+    digitalWrite(s->_en_pin, HIGH);
 
-    pinMode(s->dir_pin,  OUTPUT);
-    pinMode(s->step_pin, OUTPUT);
-    pinMode(s->ms1_pin,  OUTPUT);
-    pinMode(s->ms2_pin,  OUTPUT);
+    pinMode(s->_dir_pin,  OUTPUT);
+    pinMode(s->_step_pin, OUTPUT);
+    pinMode(s->_ms1_pin,  OUTPUT);
+    pinMode(s->_ms2_pin,  OUTPUT);
     // enable driver
-    digitalWrite(s->en_pin, LOW);
+    digitalWrite(s->_en_pin, LOW);
 
     set_address(s, address);
 
     // initialize UART
     if (!serial_initialized) {
-        s_serial.begin(115200, SERIAL_8N1, s->rx_pin, s->tx_pin);
+        s_serial.begin(115200, SERIAL_8N1, s->_rx_pin, s->_tx_pin);
         serial_initialized = true;
     }
 
-    TMC2209_REGISTER_SET(s->gconf, GCONF_PDN_DISABLE, 1);
-    TMC2209_REGISTER_SET(s->gconf, GCONF_MSTEP_REG_SELECT, 1);
-    register_write(s, GCONF_ADRESS, s->gconf);
-    return (s->communicating = tmc2209_check_connection(s));
+    TMC2209_REGISTER_SET(s->_gconf, GCONF_PDN_DISABLE, 1);
+    TMC2209_REGISTER_SET(s->_gconf, GCONF_MSTEP_REG_SELECT, 1);
+    register_write(s, GCONF_ADRESS, s->_gconf);
+    return (s->_communicating = tmc2209_check_connection(s));
 }
 
 void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
@@ -80,27 +80,27 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
         microsteps != TMC2209_MICROSTEPS_32 || microsteps != TMC2209_MICROSTEPS_64)
         return;
 
-    s->microsteps = microsteps;
+    s->_microsteps = microsteps;
 
-    if (s->communicating) {
+    if (s->_communicating) {
         // TODO: set microsteps via UART
     } else {
-        switch (s->microsteps) {
+        switch (s->_microsteps) {
             case TMC2209_MICROSTEPS_8:
-                digitalWrite(s->ms1_pin, LOW);
-                digitalWrite(s->ms2_pin, LOW);
+                digitalWrite(s->_ms1_pin, LOW);
+                digitalWrite(s->_ms2_pin, LOW);
             break;
             case TMC2209_MICROSTEPS_16:
-                digitalWrite(s->ms1_pin, HIGH);
-                digitalWrite(s->ms2_pin, HIGH);
+                digitalWrite(s->_ms1_pin, HIGH);
+                digitalWrite(s->_ms2_pin, HIGH);
             break;
             case TMC2209_MICROSTEPS_32:
-                digitalWrite(s->ms1_pin, HIGH);
-                digitalWrite(s->ms2_pin, LOW);
+                digitalWrite(s->_ms1_pin, HIGH);
+                digitalWrite(s->_ms2_pin, LOW);
             break;
             case TMC2209_MICROSTEPS_64:
-                digitalWrite(s->ms1_pin, LOW);
-                digitalWrite(s->ms2_pin, HIGH);
+                digitalWrite(s->_ms1_pin, LOW);
+                digitalWrite(s->_ms2_pin, HIGH);
             break;
         }
     }
@@ -110,21 +110,21 @@ tmc2209_microstep tmc2209_get_microsteps(tmc2209_t *s)
 {
     if (s == NULL) return TMC2209_DEFAULT_MICROSTEPS;
 
-    return s->microsteps;
+    return s->_microsteps;
 }
 
 void tmc2209_set_step_delay(tmc2209_t *s, uint32_t step_delay_us)
 {
     if (s == NULL) return;
 
-    s->step_delay = step_delay_us;
+    s->_step_delay = step_delay_us;
 }
 
 uint32_t tmc2209_get_step_delay(tmc2209_t *s)
 {
     if (s == NULL) return TMC2209_DEFAULT_STEP_DELAY;
 
-    return s->step_delay;
+    return s->_step_delay;
 }
 
 void tmc2209_set_direction(tmc2209_t *s, tmc2209_direction dir)
@@ -133,17 +133,17 @@ void tmc2209_set_direction(tmc2209_t *s, tmc2209_direction dir)
 
     if (dir != TMC2209_CW || dir != TMC2209_CCW) return;
 
-    if (s->communicating) {
+    if (s->_communicating) {
         // TODO: Implement setting direction via UART
     } else 
-        digitalWrite(s->dir_pin, s->dir);
+        digitalWrite(s->_dir_pin, s->_dir);
 }
 
 tmc2209_direction tmc2209_get_direction(tmc2209_t *s)
 {
     if (s == NULL) return TMC2209_CCW;
 
-    return s->dir; 
+    return s->_dir; 
 }
 
 void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
@@ -151,8 +151,8 @@ void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
     if (s == NULL) return;
 
     tmc2209_set_direction(s, dir);
-    s->step  = 0;
-    s->steps = steps;
+    s->_step  = 0;
+    s->_steps = steps;
 }
 
 void tmc2209_rotate(tmc2209_t *s, int32_t degree)
@@ -162,7 +162,7 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     uint32_t steps;
     tmc2209_direction dir;
 
-    steps = (abs(degree) * s->steps_per_revolution * s->microsteps) / 360;
+    steps = (abs(degree) * s->_steps_per_revolution * s->_microsteps) / 360;
     dir   = (degree > 0) ? TMC2209_CW : TMC2209_CCW;
 
     tmc2209_step(s, steps, dir);
@@ -172,13 +172,13 @@ void tmc2209_update(tmc2209_t *s)
 {
     if (s == NULL) return;
 
-    if (s->step < s->steps) {
-        s->step++;
+    if (s->_step < s->_steps) {
+        s->_step++;
 
-        digitalWrite(s->step_pin, HIGH);
-        delayMicroseconds(s->step_delay);
-        digitalWrite(s->step_pin, LOW);
-        delayMicroseconds(s->step_delay);
+        digitalWrite(s->_step_pin, HIGH);
+        delayMicroseconds(s->_step_delay);
+        digitalWrite(s->_step_pin, LOW);
+        delayMicroseconds(s->_step_delay);
     }
 }
 
@@ -186,39 +186,39 @@ void tmc2209_disable(tmc2209_t *s)
 {
     if (s == NULL) return;
 
-    if (s->communicating) {
-        TMC2209_REGISTER_CLR(s->chopconf, CHOPCONF_TOFF, 4);
-        register_write(s, CHOPCONF_ADDRESS, s->chopconf);
+    if (s->_communicating) {
+        TMC2209_REGISTER_CLR(s->_chopconf, CHOPCONF_TOFF, 4);
+        register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
     }
 
-    digitalWrite(s->en_pin, HIGH);
+    digitalWrite(s->_en_pin, HIGH);
 }
 
 void tmc2209_enable(tmc2209_t *s)
 {
     if (s == NULL) return;
 
-    if (s->communicating) {
-        TMC2209_REGISTER_VAL(s->chopconf, CHOPCONF_TOFF, 4, TOFF_DEFAULT);
-        register_write(s, CHOPCONF_ADDRESS, s->chopconf);
+    if (s->_communicating) {
+        TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_TOFF, 4, TOFF_DEFAULT);
+        register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
     }
 
-    digitalWrite(s->en_pin, LOW);
+    digitalWrite(s->_en_pin, LOW);
 }
 
 bool tmc2209_check_connection(tmc2209_t * s)
 {
-    s->gconf = register_read(s, GCONF_ADRESS) & GCONF_BIT_MASK;
-    return (s->gconf >> GCONF_PDN_DISABLE) & 0x1;
+    s->_gconf = register_read(s, GCONF_ADRESS) & GCONF_BIT_MASK;
+    return (s->_gconf >> GCONF_PDN_DISABLE) & 0x1;
 }
 
 void tmc2209_toff(tmc2209_t *s, uint8_t val)
 {
     if (s == NULL) return;
 
-    if (s->communicating) {
-        TMC2209_REGISTER_VAL(s->chopconf, CHOPCONF_TOFF, 4, val & 0xF);
-        register_write(s, CHOPCONF_ADDRESS, s->chopconf);
+    if (s->_communicating) {
+        TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_TOFF, 4, val & 0xF);
+        register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
     }
 }
 
@@ -226,9 +226,9 @@ void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold)
 {
     if (s == NULL) return;
 
-    if (s->communicating) {
-        TMC2209_REGISTER_VAL(s->sgthrs, 0, 8, threshold);
-        register_write(s, SGTHRS_ADDRESS, s->sgthrs);
+    if (s->_communicating) {
+        TMC2209_REGISTER_VAL(s->_sgthrs, 0, 8, threshold);
+        register_write(s, SGTHRS_ADDRESS, s->_sgthrs);
     }
 }
 
@@ -236,9 +236,9 @@ uint16_t tmc2209_stallguard_result(tmc2209_t *s)
 {
    if (s == NULL) return 0;
 
-   if (s->communicating) {
-        s->sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
-        return s->sg_result;
+   if (s->_communicating) {
+        s->_sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
+        return s->_sg_result;
    }
    return 0;
 }
@@ -247,9 +247,9 @@ bool tmc2209_is_stalling(tmc2209_t *s)
 {
     if (s == NULL) return false;
 
-    if (s->communicating) {
-        s->sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
-        return s->sg_result <= (2 * (uint16_t)s->sgthrs);
+    if (s->_communicating) {
+        s->_sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
+        return s->_sg_result <= (2 * (uint16_t)s->_sgthrs);
     }
     return false;
 }
@@ -260,20 +260,20 @@ void set_address(tmc2209_t *s, tmc2209_address address)
 {
     switch (address) {
         case TMC2209_ADDRESS_0:
-            digitalWrite(s->ms1_pin, LOW);
-            digitalWrite(s->ms2_pin, LOW);
+            digitalWrite(s->_ms1_pin, LOW);
+            digitalWrite(s->_ms2_pin, LOW);
         break;
         case TMC2209_ADDRESS_1:
-            digitalWrite(s->ms1_pin, HIGH);
-            digitalWrite(s->ms2_pin, LOW);
+            digitalWrite(s->_ms1_pin, HIGH);
+            digitalWrite(s->_ms2_pin, LOW);
         break;
         case TMC2209_ADDRESS_2:
-            digitalWrite(s->ms1_pin, LOW);
-            digitalWrite(s->ms2_pin, HIGH);
+            digitalWrite(s->_ms1_pin, LOW);
+            digitalWrite(s->_ms2_pin, HIGH);
         break;
         case TMC2209_ADDRESS_3:
-            digitalWrite(s->ms1_pin, HIGH);
-            digitalWrite(s->ms2_pin, HIGH);
+            digitalWrite(s->_ms1_pin, HIGH);
+            digitalWrite(s->_ms2_pin, HIGH);
         break;
         default:
             // TODO: Implement Error Reporting
@@ -290,7 +290,7 @@ void register_write(tmc2209_t *s, uint8_t address, uint32_t val)
     uint8_t len = 8;
     uint8_t datagram[len] = {
         TMC2209_MASK_SYNC,     // sync byte
-        (uint8_t) s->address,  // slave address
+        (uint8_t) s->_address, // slave address
         address,               // register address with write flag
         (uint8_t) (val >> 24), // data byte 1
         (uint8_t) (val >> 16), // data byte 2
@@ -319,7 +319,7 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
     uint8_t len = 4;
     uint8_t datagram[len] = {
         TMC2209_MASK_SYNC,          // sync byte
-        (uint8_t) s->address,       // slave address
+        (uint8_t) s->_address,      // slave address
         address,                    // register address with read flag
         0x00,                       // placeholder for crc
     };

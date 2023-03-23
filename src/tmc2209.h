@@ -46,49 +46,49 @@ typedef enum {
 #endif
 
 typedef struct {
-    uint8_t en_pin;     // enable
-    uint8_t dir_pin;    // direction
-    uint8_t step_pin;   // step-pulsing
-    uint8_t rx_pin;     // UART
-    uint8_t tx_pin;     // UART
-    uint8_t ms1_pin;    // microstep/address LSB
-    uint8_t ms2_pin;    // microstep/address MSB
+    uint8_t _en_pin;     // enable
+    uint8_t _dir_pin;    // direction
+    uint8_t _step_pin;   // step-pulsing
+    uint8_t _rx_pin;     // UART
+    uint8_t _tx_pin;     // UART
+    uint8_t _ms1_pin;    // microstep/address LSB
+    uint8_t _ms2_pin;    // microstep/address MSB
 
-    tmc2209_address   address;              // address for UART (see enum)
-    tmc2209_microstep microsteps;           // divisor for single step (see enum)
-    tmc2209_direction dir;                  // spinning direction of the motor
-    uint32_t          step_delay;           // delay in µs between one low/high pulse
-    uint16_t          steps_per_revolution; // this number * microsteps = steps for one full turn
+    tmc2209_address   _address;              // address for UART (see enum)
+    tmc2209_microstep _microsteps;           // divisor for single step (see enum)
+    tmc2209_direction _dir;                  // spinning direction of the motor
+    uint32_t          _step_delay;           // delay in µs between one low/high pulse
+    uint16_t          _steps_per_revolution; // this number * microsteps = steps for one full turn
 
-    uint32_t step;   // current steps (for STEP/DIR interface)
-    uint32_t steps;  // final steps (for STEP/DIR interface)
+    uint32_t _step;   // current steps (for STEP/DIR interface)
+    uint32_t _steps;  // final steps (for STEP/DIR interface)
 
-    bool communicating;
+    bool _communicating;
     // registers
-    GCONF_t        gconf;
-    GSTAT_t        gstat;
-    IFCNT_t        ifcnt;
-    SLAVECONF_t    slaveconf;
-    OTP_PROG_t     otp_prog;
-    OTP_READ_t     otp_read;
-    IOIN_t         ioin;
-    FACTORY_CONF_t factory_conf;
-    IHOLD_IRUN_t   ihold_irun;
-    TPOWERDOWN_t   tpowerdown;
-    TSTEP_t        tstep;
-    TPWMTHRS_t     tpwmthrs;
-    VACTUAL_t      vactual;
-    TCOOLTHRS_t    tcoolthrs;
-    SGTHRS_t       sgthrs;
-    SG_RESULT_t    sg_result;
-    COOLCONF_t     coolconf;
-    MSCNT_t        mscnt;
-    MSCURACT_t     mscuract;
-    CHOPCONF_t     chopconf;
-    DRV_STATUS_t   drv_status;
-    PWMCONF_t      pwmconf;
-    PWM_SCALE_t    pwm_scale;
-    PWM_AUTO_t     pwm_auto;
+    GCONF_t        _gconf;
+    GSTAT_t        _gstat;
+    IFCNT_t        _ifcnt;
+    SLAVECONF_t    _slaveconf;
+    OTP_PROG_t     _otp_prog;
+    OTP_READ_t     _otp_read;
+    IOIN_t         _ioin;
+    FACTORY_CONF_t _factory_conf;
+    IHOLD_IRUN_t   _ihold_irun;
+    TPOWERDOWN_t   _tpowerdown;
+    TSTEP_t        _tstep;
+    TPWMTHRS_t     _tpwmthrs;
+    VACTUAL_t      _vactual;
+    TCOOLTHRS_t    _tcoolthrs;
+    SGTHRS_t       _sgthrs;
+    SG_RESULT_t    _sg_result;
+    COOLCONF_t     _coolconf;
+    MSCNT_t        _mscnt;
+    MSCURACT_t     _mscuract;
+    CHOPCONF_t     _chopconf;
+    DRV_STATUS_t   _drv_status;
+    PWMCONF_t      _pwmconf;
+    PWM_SCALE_t    _pwm_scale;
+    PWM_AUTO_t     _pwm_auto;
 } tmc2209_t;
 
 // initialize the driver, both interfaces
