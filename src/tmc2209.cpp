@@ -68,7 +68,7 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     TMC2209_REGISTER_SET(s->gconf, GCONF_PDN_DISABLE, 1);
     TMC2209_REGISTER_SET(s->gconf, GCONF_MSTEP_REG_SELECT, 1);
     register_write(s, GCONF_ADRESS, s->gconf);
-    return (s->communicating = check_connection(s));
+    return (s->communicating = tmc2209_check_connection(s));
 }
 
 void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
@@ -163,7 +163,7 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     tmc2209_direction dir;
 
     steps = (abs(degree) * s->steps_per_revolution * s->microsteps) / 360;
-    dir   = (dir > 0) ? TMC2209_CW : TMC2209_CCW;
+    dir   = (degree > 0) ? TMC2209_CW : TMC2209_CCW;
 
     tmc2209_step(s, steps, dir);
 }
@@ -206,7 +206,7 @@ void tmc2209_enable(tmc2209_t *s)
     digitalWrite(s->en_pin, LOW);
 }
 
-bool check_connection(tmc2209_t * s)
+bool tmc2209_check_connection(tmc2209_t * s)
 {
     s->gconf = register_read(s, GCONF_ADRESS) & GCONF_BIT_MASK;
     return (s->gconf >> GCONF_PDN_DISABLE) & 0x1;
@@ -218,7 +218,40 @@ void tmc2209_toff(tmc2209_t *s, uint8_t val)
 
     if (s->communicating) {
         TMC2209_REGISTER_VAL(s->chopconf, CHOPCONF_TOFF, 4, val & 0xF);
+        register_write(s, CHOPCONF_ADDRESS, s->chopconf);
     }
+}
+
+void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold)
+{
+    if (s == NULL) return;
+
+    if (s->communicating) {
+        TMC2209_REGISTER_VAL(s->sgthrs, 0, 8, threshold);
+        register_write(s, SGTHRS_ADDRESS, s->sgthrs);
+    }
+}
+
+uint16_t tmc2209_stallguard_result(tmc2209_t *s)
+{
+   if (s == NULL) return 0;
+
+   if (s->communicating) {
+        s->sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
+        return s->sg_result;
+   }
+   return 0;
+}
+
+bool tmc2209_is_stalling(tmc2209_t *s)
+{
+    if (s == NULL) return false;
+
+    if (s->communicating) {
+        s->sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
+        return s->sg_result <= (2 * (uint16_t)s->sgthrs);
+    }
+    return false;
 }
 
 // helper functions definition
@@ -295,7 +328,6 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
 
     for (uint8_t i = 0; i < READ_MAX_RETRIES; ++i) {
         uint8_t j, crc;
-        bool crc_error;
         unsigned long mills, last_mills;
         uint32_t sync_target;
         uint16_t timeout;
@@ -381,13 +413,10 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
             (uint8_t) (reply >>  0), // crc
         };
 
-        crc_error = false;
         crc = calc_crc(reply_datagram, 7);
         if (crc != reply_datagram[7] || crc == 0) {
-            crc_error = true;
             reply = 0;
         } else {
-            crc_error = false;
             break;
         }
     }

@@ -130,10 +130,19 @@ void tmc2209_disable(tmc2209_t *s);
 void tmc2209_enable(tmc2209_t *s);
 
 // Check UART connection with the driver
-bool check_connection(tmc2209_t * s);
+bool tmc2209_check_connection(tmc2209_t * s);
 
 // toff time 0..15
 void tmc2209_toff(tmc2209_t *s, uint8_t val);
+
+// set stallguard threshold
+void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold);
+
+// stallguard result
+uint16_t tmc2209_stallguard_result(tmc2209_t *s);
+
+// check if driver is stalling
+bool tmc2209_is_stalling(tmc2209_t *s);
 
 #ifdef __cplusplus
 } // extern "C"
