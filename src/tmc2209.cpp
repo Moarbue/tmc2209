@@ -83,7 +83,8 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
     s->_microsteps = microsteps;
 
     if (s->_communicating) {
-        // TODO: set microsteps via UART
+        TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_MRES, 4, microsteps);
+        register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
     } else {
         switch (s->_microsteps) {
             case TMC2209_MICROSTEPS_8:
