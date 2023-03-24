@@ -151,6 +151,8 @@ void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
 {
     if (s == NULL) return;
 
+    if (s->_step < s->_steps) return;
+
     tmc2209_set_direction(s, dir);
     s->_step  = 0;
     s->_steps = steps;
