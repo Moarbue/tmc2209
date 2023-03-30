@@ -117,6 +117,12 @@ tmc2209_direction tmc2209_get_direction(tmc2209_t *s);
 // move the motor by steps and direction
 void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir);
 
+// reset the steps of the motor, abort a movement
+void tmc2209_step_reset(tmc2209_t *s);
+
+// check if stepper is currently moving via STEP/DIR
+bool tmc2209_step_is_idle(tmc2209_t *s);
+
 // move the motor by degrees, sign specifies the direction
 void tmc2209_rotate(tmc2209_t *s, int32_t degree);
 

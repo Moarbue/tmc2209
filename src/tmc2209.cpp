@@ -158,6 +158,18 @@ void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
     s->_steps = steps;
 }
 
+void tmc2209_step_reset(tmc2209_t *s)
+{
+    if (s == NULL) return;
+
+    s->_step = s->_steps;
+}
+
+bool tmc2209_step_is_idle(tmc2209_t *s)
+{
+    return (s->_step < s->_steps);
+}
+
 void tmc2209_rotate(tmc2209_t *s, int32_t degree)
 {
     if (s == NULL) return;
