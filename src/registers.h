@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-#define TMC2209_REGISTER_CLR(register, pos, bits) ((register) &= ~(((1 << (bits)) - 1) << pos))
-#define TMC2209_REGISTER_SET(register, pos, bits) ((register) |=  (((1 << (bits)) - 1) << pos))
+#define TMC2209_REGISTER_CLR(register, pos, bits) ((register) &= ~(((1ULL << (bits)) - 1) << pos))
+#define TMC2209_REGISTER_SET(register, pos, bits) ((register) |=  (((1ULL << (bits)) - 1) << pos))
 #define TMC2209_REGISTER_VAL(register, pos, bits, val) do { \
         TMC2209_REGISTER_CLR(register, pos, bits);          \
         (register) |= ((val) << (pos));                     \
@@ -252,7 +252,7 @@ typedef enum {
     PWMCONF_PWM_GRAD      =  8,
     PWMCONF_PWM_OFS       =  0,
     PWMCONF_BIT_MASK      = 0xFF3FFFFF,   // 1111 1111 0011 1111 1111 1111 1111 1111
-    PWMCONF_SIZE          = 22,
+    PWMCONF_SIZE          = 32,
 } tmc2209_register_pwmconf;
 
 // PWM_SCALE settings
