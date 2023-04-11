@@ -56,10 +56,10 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     pinMode(s->_step_pin, OUTPUT);
     pinMode(s->_ms1_pin,  OUTPUT);
     pinMode(s->_ms2_pin,  OUTPUT);
+    set_address(s, address);
     // enable driver
     digitalWrite(s->_en_pin, LOW);
 
-    set_address(s, address);
 
     // initialize UART
     if (!serial_initialized) {
@@ -81,7 +81,12 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     TMC2209_REGISTER_SET(s->_gconf, GCONF_PDN_DISABLE, 1);
     TMC2209_REGISTER_SET(s->_gconf, GCONF_MSTEP_REG_SELECT, 1);
     register_write(s, GCONF_ADRESS, s->_gconf);
-    return (s->_communicating = tmc2209_check_connection(s));
+
+    delay(REPLY_DELAY);
+    uint8_t retries = 0;
+    while(!(s->_communicating = tmc2209_check_connection(s)) && retries++ < 5) {}
+    if (retries > 5) return false;
+    return true;
 }
 
 void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
@@ -181,6 +186,8 @@ void tmc2209_step_reset(tmc2209_t *s)
 
 bool tmc2209_step_is_idle(tmc2209_t *s)
 {
+    if (s == NULL) return true;
+
     return (s->_step < s->_steps);
 }
 
@@ -214,11 +221,10 @@ void tmc2209_update(tmc2209_t *s)
 void tmc2209_disable(tmc2209_t *s)
 {
     if (s == NULL) return;
+    if (!s->_communicating) return;
 
-    if (s->_communicating) {
-        TMC2209_REGISTER_CLR(s->_chopconf, CHOPCONF_TOFF, 4);
-        register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
-    }
+    TMC2209_REGISTER_CLR(s->_chopconf, CHOPCONF_TOFF, 4);
+    register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
 
     digitalWrite(s->_en_pin, HIGH);
 }
@@ -226,11 +232,10 @@ void tmc2209_disable(tmc2209_t *s)
 void tmc2209_enable(tmc2209_t *s)
 {
     if (s == NULL) return;
+    if (!s->_communicating) return;
 
-    if (s->_communicating) {
-        TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_TOFF, 4, TOFF_DEFAULT);
-        register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
-    }
+    TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_TOFF, 4, TOFF_DEFAULT);
+    register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
 
     digitalWrite(s->_en_pin, LOW);
 }
@@ -246,11 +251,10 @@ bool tmc2209_check_connection(tmc2209_t * s)
 void tmc2209_toff(tmc2209_t *s, uint8_t val)
 {
     if (s == NULL) return;
+    if (!s->_communicating) return;
 
-    if (s->_communicating) {
-        TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_TOFF, 4, val & 0xF);
-        register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
-    }
+    TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_TOFF, 4, val & 0xF);
+    register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
 }
 
 void tmc2209_blank_time(tmc2209_t *s, uint8_t clock_cycles)
@@ -358,33 +362,28 @@ void tmc2209_sedn(tmc2209_t *s, uint8_t val)
 void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold)
 {
     if (s == NULL) return;
+    if (!s->_communicating) return;
 
-    if (s->_communicating) {
-        TMC2209_REGISTER_VAL(s->_sgthrs, 0, SGTHRS_SIZE, threshold);
-        register_write(s, SGTHRS_ADDRESS, s->_sgthrs);
-    }
+    TMC2209_REGISTER_VAL(s->_sgthrs, 0, SGTHRS_SIZE, threshold);
+    register_write(s, SGTHRS_ADDRESS, s->_sgthrs);
 }
 
 uint16_t tmc2209_stallguard_result(tmc2209_t *s)
 {
-   if (s == NULL) return 0;
+    if (s == NULL) return 0;
+    if (!s->_communicating) return 0;
 
-   if (s->_communicating) {
-        s->_sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
-        return s->_sg_result;
-   }
-   return 0;
+    s->_sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
+    return s->_sg_result;
 }
 
 bool tmc2209_is_stalling(tmc2209_t *s)
 {
     if (s == NULL) return false;
+    if (!s->_communicating) return false;
 
-    if (s->_communicating) {
-        s->_sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
-        return s->_sg_result <= (2 * (uint16_t)s->_sgthrs);
-    }
-    return false;
+    s->_sg_result = register_read(s, SG_RESULT_ADDRESS) & SG_RESULT_BIT_MASK;
+    return s->_sg_result <= (2 * (uint16_t)s->_sgthrs);
 }
 
 // helper functions definition
