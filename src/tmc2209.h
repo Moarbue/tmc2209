@@ -127,9 +127,6 @@ bool tmc2209_step_is_idle(tmc2209_t *s);
 // move the motor by degrees, sign specifies the direction
 void tmc2209_rotate(tmc2209_t *s, int32_t degree);
 
-// all functions are non blocking, therefore call update function every loop iteration
-void tmc2209_update(tmc2209_t *s);
-
 // disable the driver
 void tmc2209_disable(tmc2209_t *s);
 

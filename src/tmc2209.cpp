@@ -21,6 +21,7 @@ void set_address(tmc2209_t *s, tmc2209_address address);
 void register_write(tmc2209_t *s, uint8_t address, uint32_t val);
 uint32_t register_read(tmc2209_t *s, uint8_t address);
 uint8_t calc_crc(uint8_t datagram[], uint8_t len);
+void step_task(void *stepper);
 
 bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
@@ -173,8 +174,9 @@ void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
     if (s->_step < s->_steps) return;
 
     tmc2209_set_direction(s, dir);
-    s->_step  = 0;
     s->_steps = steps;
+
+    xTaskCreate(step_task, "Step Task", 10000, (void *)s, 1, NULL);
 }
 
 void tmc2209_step_reset(tmc2209_t *s)
@@ -202,20 +204,6 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     dir   = (degree > 0) ? TMC2209_CW : TMC2209_CCW;
 
     tmc2209_step(s, steps, dir);
-}
-
-void tmc2209_update(tmc2209_t *s)
-{
-    if (s == NULL) return;
-
-    if (s->_step < s->_steps) {
-        s->_step++;
-
-        digitalWrite(s->_step_pin, HIGH);
-        delayMicroseconds(s->_step_delay);
-        digitalWrite(s->_step_pin, LOW);
-        delayMicroseconds(s->_step_delay);
-    }
 }
 
 void tmc2209_disable(tmc2209_t *s)
@@ -586,4 +574,17 @@ uint8_t calc_crc(uint8_t datagram[], uint8_t len)
 		}
 	}
 	return crc;
+}
+
+void step_task(void *stepper)
+{
+    tmc2209_t *s = (tmc2209_t *)stepper;
+    for (s->_step = 0; s->_step < s->_steps; s->_step++) {
+        digitalWrite(s->_step_pin, HIGH);
+        delayMicroseconds(s->_step_delay);
+        digitalWrite(s->_step_pin, LOW);
+        delayMicroseconds(s->_step_delay);
+    }
+
+    vTaskDelete(NULL);
 }
