@@ -10,11 +10,11 @@ extern "C" {
 #include "registers.h"
 
 typedef enum {
-    TMC2209_ADDRESS_0  = 0x0b00,
-    TMC2209_ADDRESS_1  = 0x0b01,
-    TMC2209_ADDRESS_2  = 0x0b10,
-    TMC2209_ADDRESS_3  = 0x0b11,
-    TMC2209_NO_ADDRESS = 0xFFFF,
+    TMC2209_ADDRESS_0  = 0b00,
+    TMC2209_ADDRESS_1  = 0b01,
+    TMC2209_ADDRESS_2  = 0b10,
+    TMC2209_ADDRESS_3  = 0b11,
+    TMC2209_NO_ADDRESS = 0xF,
 } tmc2209_address;
 
 typedef enum {
