@@ -43,7 +43,11 @@ typedef enum {
 
 // IFCNT settings
 typedef uint8_t IFCNT_t;
-#define IFCNT_ADRESS 0x02
+typedef enum {
+    IFCNT_ADRESS   = 0x02,
+    IFCNT_BIT_MASK = 0xFF,
+    IFCNT_SIZE     = 8,
+} tmc2209_register_ifcnt;
 
 // SLAVECONF settings
 typedef uint8_t SLAVECONF_t;
@@ -51,6 +55,7 @@ typedef uint8_t SLAVECONF_t;
 typedef enum {
     SLAVECONF_ADDRESS      = 0x03,
     SLAVECONF_BIT_MASK     = 0xF, // 0000 1111
+    SLAVECONF_SIZE         = 4,
 } tmc2209_register_slaveconf;
 
 // OTP_PROG settings
@@ -71,6 +76,7 @@ typedef enum {
     OTP_READ_OTP1     =  8,
     OTP_READ_OTP2     = 16,
     OTP_READ_BIT_MASK = 0xFFFFFF, // 0000 0000 1111 1111 1111 1111 1111 1111
+    OTP_READ_SIZE     = 24,
 } tmc2209_register_otp_read;
 
 // IOIN settings
@@ -110,13 +116,17 @@ typedef enum {
 
 // TPOWERDOWN settings
 typedef uint8_t TPOWERDOWN_t;
-#define TPOWERDOWN_ADDRESS 0x11
+typedef enum {
+    TPOWERDOWN_ADDRESS = 0x11,
+    TPOWERDOWN_SIZE    = 8,
+} tmc2209_register_tpowerdown;
 
 // TSTEP settings
 typedef uint32_t TSTEP_t;
 typedef enum {
     TSTEP_ADRESS   = 0x12,
     TSTEP_BIT_MASK = 0xFFFFF, // 0000 0000 0000 1111 1111 1111 1111 1111
+    TSTEP_SIZE     = 20,
 } tmc2209_register_tstep;
 
 // TPWMTHRS settings
@@ -124,6 +134,7 @@ typedef uint32_t TPWMTHRS_t;
 typedef enum {
     TPWMTHRS_ADRESS   = 0x13,
     TPWMTHRS_BIT_MASK = 0xFFFFF, // 0000 0000 0000 1111 1111 1111 1111 1111
+    TPWMTHRS_SIZE     = 20,
 } tmc2209_register_tpwmthrs;
 
 // VACTUAL settings
@@ -132,6 +143,7 @@ typedef enum {
     VACTUAL_ADDRESS  = 0x22,
     VACTUAL_DISABLE  = 0x00,
     VACTUAL_BIT_MASK = 0xFFFFFF, // 0000 0000 1111 1111 1111 1111 1111 1111
+    VACTUAL_SIZE     = 24
 } tmc2209_register_vactual;
 
 // TCOOLTHRS settings
@@ -139,17 +151,22 @@ typedef uint32_t TCOOLTHRS_t;
 typedef enum {
     TCOOLTHRS_ADDRESS  = 0x14,
     TCOOLTHRS_BIT_MASK = 0xFFFFF, // 0000 0000 0000 1111 1111 1111 1111 1111
+    TCOOLTHRS_SIZE     = 20,
 } tmc2209_register_tcoolthrs;
 
 // SGTHRS settings
 typedef uint8_t SGTHRS_t;
-#define SGTHRS_ADDRESS 0x40
+typedef enum {
+    SGTHRS_ADDRESS = 0x40,
+    SGTHRS_SIZE    = 8,
+} tmc2209_register_sgthrs;
 
 // SG_RESULT settings
 typedef uint16_t SG_RESULT_t;
 typedef enum {
     SG_RESULT_ADDRESS  = 0x41,
     SG_RESULT_BIT_MASK = 0x3FF, // 0000 0011 1111 1111
+    SG_RESULT_SIZE     = 10,
 } tmc2209_register_sg_result;
 
 // COOLCONF settings
@@ -169,6 +186,7 @@ typedef uint16_t MSCNT_t;
 typedef enum {
     MSCNT_ADDRESS  = 0x6A,
     MSCNT_BITMASK  = 0x3FF, // 0000 0011 1111 1111
+    MSCNT_SIZE     = 10,
 } tmc2209_register_mscnt;
 
 // MSCURACT settings
@@ -195,6 +213,7 @@ typedef enum {
     CHOPCONF_HSTRT    =  4,
     CHOPCONF_TOFF     =  0,
     CHOPCONF_BIT_MASK = 0xFF0387FF, // 1111 1111 0000 0011 1000 0111 1111 1111
+    CHOPCONF_SIZE     = 32,
 } tmc2209_register_chopconf;
 
 // DRV_STATUS settings
@@ -217,6 +236,7 @@ typedef enum {
     DRV_STATUS_OT        =  1,
     DRV_STATUS_OTWP      =  0,
     DRV_STATUS_BIT_MASK  = 0x300787FF,   // 0011 0000 0000 0111 1000 0111 1111 1111
+    DRV_STATUS_SIZE      = 32,
 } tmc2209_register_drv_status;
 
 // PWMCONF settings
@@ -232,6 +252,7 @@ typedef enum {
     PWMCONF_PWM_GRAD      =  8,
     PWMCONF_PWM_OFS       =  0,
     PWMCONF_BIT_MASK      = 0xFF3FFFFF,   // 1111 1111 0011 1111 1111 1111 1111 1111
+    PWMCONF_SIZE          = 22,
 } tmc2209_register_pwmconf;
 
 // PWM_SCALE settings

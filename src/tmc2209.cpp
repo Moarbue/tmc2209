@@ -71,9 +71,9 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     TMC2209_REGISTER_CLR(s->_gconf, GCONF_EN_SPREAD_CYCLE, 0);
     TMC2209_REGISTER_SET(s->_gconf, GCONF_MULTISTEP_FILT,  1);
     TMC2209_REGISTER_SET(s->_ihold_irun, IHOLD_IRUN_IHOLDDELAY, 1);
-    TMC2209_REGISTER_VAL(s->_tpowerdown, 0, 8, 20);
-    TMC2209_REGISTER_VAL(s->_chopconf, 0, 32, 0x10000053);
-    TMC2209_REGISTER_VAL(s->_pwmconf, 0, 22, 0xC10D0024);
+    TMC2209_REGISTER_VAL(s->_tpowerdown, 0, TPOWERDOWN_SIZE, 20);
+    TMC2209_REGISTER_VAL(s->_chopconf, 0, CHOPCONF_SIZE, 0x10000053);
+    TMC2209_REGISTER_VAL(s->_pwmconf, 0, PWMCONF_SIZE, 0xC10D0024);
 
     // needed for UART mode to function
     TMC2209_REGISTER_SET(s->_gconf, GCONF_PDN_DISABLE, 1);
@@ -253,7 +253,7 @@ void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold)
     if (s == NULL) return;
 
     if (s->_communicating) {
-        TMC2209_REGISTER_VAL(s->_sgthrs, 0, 8, threshold);
+        TMC2209_REGISTER_VAL(s->_sgthrs, 0, SGTHRS_SIZE, threshold);
         register_write(s, SGTHRS_ADDRESS, s->_sgthrs);
     }
 }
