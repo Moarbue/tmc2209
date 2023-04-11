@@ -359,6 +359,19 @@ void tmc2209_sedn(tmc2209_t *s, uint8_t val)
     register_write(s, COOLCONF_ADDRESS, s->_coolconf);
 }
 
+void tmc2209_vactual(tmc2209_t *s, int32_t speed)
+{
+    if (s == NULL) return;
+    if (!s->_communicating) return;
+
+    // limit speed to +- 2^23
+    speed = speed >  (1 << 23) - 1 ?  (1 << 23) - 1 : speed;
+    speed = speed < -(1 << 23) - 1 ? -(1 << 23) - 1 : speed;
+
+    TMC2209_REGISTER_VAL(s->_vactual, 0, VACTUAL_SIZE, speed);
+    register_write(s, VACTUAL_ADDRESS, s->_vactual);
+}
+
 void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold)
 {
     if (s == NULL) return;

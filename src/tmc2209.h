@@ -160,6 +160,9 @@ void tmc2209_semax(tmc2209_t *s, uint8_t val);
 // current down step speed
 void tmc2209_sedn(tmc2209_t *s, uint8_t val);
 
+// set the motor speed via UART
+void tmc2209_vactual(tmc2209_t *s, int32_t speed);
+
 // set stallguard threshold
 void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold);
 
