@@ -336,8 +336,6 @@ void register_write(tmc2209_t *s, uint8_t address, uint32_t val)
 
 uint32_t register_read(tmc2209_t *s, uint8_t address)
 {
-    while (s_serial.available() > 0) s_serial.read(); // flush buffer
-
     uint64_t reply;
 
     address |= TMC2209_MASK_READ;
@@ -358,6 +356,8 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
         uint32_t sync_target;
         uint16_t timeout;
         int8_t byte;
+
+        while (s_serial.available() > 0) s_serial.read(); // flush buffer
 
     // send read request
         for (j = 0; j < len; ++j) {
@@ -393,7 +393,10 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
         }
 
         // check if timeout occured
-        if (timeout == 0) assert(false && "Read timeout occured!");
+        if (timeout == 0) {
+            if (i == READ_MAX_RETRIES - 1) assert(false && "Read timeout occured!");
+            else continue;
+        }
 
 
         // read the remaining 5 bytes of the datagram
@@ -420,7 +423,10 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
         }
 
         // check if timeout occured
-        if (timeout == 0) assert(false && "Read timeout occured!");
+        if (timeout == 0) {
+            if (i == READ_MAX_RETRIES - 1) assert(false && "Read timeout occured!");
+            else continue;
+        }
 
 
         while (s_serial.available() > 0) s_serial.read(); // flush buffer
