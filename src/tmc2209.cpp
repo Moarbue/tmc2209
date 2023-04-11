@@ -499,11 +499,7 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
         }
 
         // check if timeout occured
-        if (timeout == 0) {
-            // TODO: Implement Error Reporting
-            if (i == READ_MAX_RETRIES - 1) assert(false && "Read timeout occured!");
-            else continue;
-        }
+        if (timeout == 0) continue;
 
 
         // read the remaining 5 bytes of the datagram
@@ -530,11 +526,7 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
         }
 
         // check if timeout occured
-        if (timeout == 0) {
-            // TODO: Implement Error Reporting
-            if (i == READ_MAX_RETRIES - 1) assert(false && "Read timeout occured!");
-            else continue;
-        }
+        if (timeout == 0) continue;
 
 
         while (s_serial.available() > 0) s_serial.read(); // flush buffer
