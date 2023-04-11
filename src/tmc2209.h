@@ -146,7 +146,7 @@ void tmc2209_toff(tmc2209_t *s, uint8_t val);
 void tmc2209_blank_time(tmc2209_t *s, uint8_t clock_cycles);
 
 // set the rms (peak current / sqrt(2)) current, depending on your RSENSE between 220mA and 2.4A
-void tmc2209_rms_current(tmc2209_t *s, uint8_t mA);
+void tmc2209_rms_current(tmc2209_t *s, uint16_t mA);
 
 // set lower velocity threshold for switching on CoolStep and stall output
 void tmc2209_tcoolthrs(tmc2209_t *s, uint32_t val);

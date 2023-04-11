@@ -148,7 +148,8 @@ void tmc2209_set_direction(tmc2209_t *s, tmc2209_direction dir)
     if (dir != TMC2209_CW || dir != TMC2209_CCW) return;
 
     if (s->_communicating) {
-        // TODO: Implement setting direction via UART
+        TMC2209_REGISTER_VAL(s->_gconf, GCONF_SHAFT, 1, s->_dir);
+        register_write(s, GCONF_ADRESS, s->_gconf);
     } else 
         digitalWrite(s->_dir_pin, s->_dir);
 }
@@ -278,7 +279,7 @@ void tmc2209_blank_time(tmc2209_t *s, uint8_t clock_cycles)
     register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
 }
 
-void tmc2209_rms_current(tmc2209_t *s, uint8_t mA)
+void tmc2209_rms_current(tmc2209_t *s, uint16_t mA)
 {
     if (s == NULL) return;
     if (!s->_communicating) return;
@@ -286,7 +287,7 @@ void tmc2209_rms_current(tmc2209_t *s, uint8_t mA)
     uint8_t CS; // current scaling
 
     // formula from tmc2209 datasheet (Page 50 & 67)
-    CS = 32.0 * 1.41421 * (mA / 1000.0) * (s->_rsense + 0.02) / 0.325 - 1;
+    CS = (uint8_t)(32.0 * 1.41421 * (mA / 1000.0) * (s->_rsense + 0.02) / 0.325 - 1);
 
     // CS < 16 reduces effective microstep resolution
     if (CS < 16) {
@@ -305,7 +306,7 @@ void tmc2209_rms_current(tmc2209_t *s, uint8_t mA)
 
     TMC2209_REGISTER_VAL(s->_ihold_irun, IHOLD_IRUN_IRUN,  5, CS);
     // TODO: Add option to specify ihold percentage
-    TMC2209_REGISTER_VAL(s->_ihold_irun, IHOLD_IRUN_IHOLD, 5, CS * 0.7);
+    TMC2209_REGISTER_VAL(s->_ihold_irun, IHOLD_IRUN_IHOLD, 5, (uint8_t)(CS * 0.7));
     register_write(s, IHOLD_IRUN_ADDRESS, s->_ihold_irun);
 }
 
