@@ -65,6 +65,17 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
         serial_initialized = true;
     }
 
+    // set default values
+    TMC2209_REGISTER_SET(s->_gconf, GCONF_I_SCALE_ANALOG,  1);
+    TMC2209_REGISTER_CLR(s->_gconf, GCONF_INTERNAL_RSENSE, 0);
+    TMC2209_REGISTER_CLR(s->_gconf, GCONF_EN_SPREAD_CYCLE, 0);
+    TMC2209_REGISTER_SET(s->_gconf, GCONF_MULTISTEP_FILT,  1);
+    TMC2209_REGISTER_SET(s->_ihold_irun, IHOLD_IRUN_IHOLDDELAY, 1);
+    TMC2209_REGISTER_VAL(s->_tpowerdown, 0, 8, 20);
+    TMC2209_REGISTER_VAL(s->_chopconf, 0, 32, 0x10000053);
+    TMC2209_REGISTER_VAL(s->_pwmconf, 0, 22, 0xC10D0024);
+
+    // needed for UART mode to function
     TMC2209_REGISTER_SET(s->_gconf, GCONF_PDN_DISABLE, 1);
     TMC2209_REGISTER_SET(s->_gconf, GCONF_MSTEP_REG_SELECT, 1);
     register_write(s, GCONF_ADRESS, s->_gconf);
