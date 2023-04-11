@@ -355,7 +355,7 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
         unsigned long mills, last_mills;
         uint32_t sync_target;
         uint16_t timeout;
-        int8_t byte;
+        int16_t byte;
 
         while (s_serial.available() > 0) s_serial.read(); // flush buffer
 
@@ -385,7 +385,7 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
 
             byte = s_serial.read();
             // no data available
-            if (byte == -1) continue;
+            if (byte < 0) continue;
 
             reply <<= 8;           // make space for incomming byte
             reply  |= byte & 0xFF; // shift new byte in
@@ -415,7 +415,7 @@ uint32_t register_read(tmc2209_t *s, uint8_t address)
 
             byte = s_serial.read();
             // no data available
-            if (byte == -1) continue;
+            if (byte < 0) continue;
 
             reply <<= 8;           // make space for incomming byte
             reply  |= byte & 0xFF; // shift new byte in
