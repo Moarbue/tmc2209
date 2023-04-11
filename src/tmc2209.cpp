@@ -67,8 +67,8 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
 
     // set default values
     TMC2209_REGISTER_SET(s->_gconf, GCONF_I_SCALE_ANALOG,  1);
-    TMC2209_REGISTER_CLR(s->_gconf, GCONF_INTERNAL_RSENSE, 0);
-    TMC2209_REGISTER_CLR(s->_gconf, GCONF_EN_SPREAD_CYCLE, 0);
+    TMC2209_REGISTER_CLR(s->_gconf, GCONF_INTERNAL_RSENSE, 1);
+    TMC2209_REGISTER_CLR(s->_gconf, GCONF_EN_SPREAD_CYCLE, 1);
     TMC2209_REGISTER_SET(s->_gconf, GCONF_MULTISTEP_FILT,  1);
     TMC2209_REGISTER_SET(s->_ihold_irun, IHOLD_IRUN_IHOLDDELAY, 1);
     TMC2209_REGISTER_VAL(s->_tpowerdown, 0, TPOWERDOWN_SIZE, 20);
