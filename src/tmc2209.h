@@ -59,6 +59,7 @@ typedef struct {
     tmc2209_direction _dir;                  // spinning direction of the motor
     uint32_t          _step_delay;           // delay in µs between one low/high pulse
     uint16_t          _steps_per_revolution; // this number * microsteps = steps for one full turn
+    float             _rsense;               // needed for current calculation in UART mode
 
     uint32_t _step;   // current steps (for STEP/DIR interface)
     uint32_t _steps;  // final steps (for STEP/DIR interface)
@@ -94,7 +95,7 @@ typedef struct {
 // initialize the driver, both interfaces
 bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
-                                      tmc2209_address address);
+                                      tmc2209_address address, float rsense);
 
 // set the microsteps of the driver
 void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps);
@@ -140,6 +141,24 @@ bool tmc2209_check_connection(tmc2209_t * s);
 
 // toff time 0..15
 void tmc2209_toff(tmc2209_t *s, uint8_t val);
+
+// set comparator blank time to 16, 24, 32 or 40 clocks
+void tmc2209_blank_time(tmc2209_t *s, uint8_t clock_cycles);
+
+// set the rms (peak current / sqrt(2)) current, depending on your RSENSE between 220mA and 2.4A
+void tmc2209_rms_current(tmc2209_t *s, uint8_t mA);
+
+// set lower velocity threshold for switching on CoolStep and stall output
+void tmc2209_tcoolthrs(tmc2209_t *s, uint32_t val);
+
+// minimum StallGuard2 value for smart current control and smart current enable
+void tmc2209_semin(tmc2209_t *s, uint8_t val);
+
+// StallGuard2 hysteresis value for smart current control
+void tmc2209_semax(tmc2209_t *s, uint8_t val);
+
+// current down step speed
+void tmc2209_sedn(tmc2209_t *s, uint8_t val);
 
 // set stallguard threshold
 void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold);
