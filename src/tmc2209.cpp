@@ -61,6 +61,8 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     // enable driver
     digitalWrite(s->_en_pin, LOW);
 
+    // Create step task for accurate stepping
+    xTaskCreate(step_task, "Step Task", 10000, (void *)s, 1, NULL);
 
     // initialize UART
     if (!serial_initialized) {
@@ -171,12 +173,15 @@ void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
 {
     if (s == NULL) return;
 
+    // otherwise step/dir interface doesn't work
+    tmc2209_vactual(s, 0);
+
     if (s->_step < s->_steps) return;
 
     tmc2209_set_direction(s, dir);
+    s->_step  = 0;
     s->_steps = steps;
 
-    xTaskCreate(step_task, "Step Task", 10000, (void *)s, 1, NULL);
 }
 
 void tmc2209_step_reset(tmc2209_t *s)
@@ -200,7 +205,8 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     uint32_t steps;
     tmc2209_direction dir;
 
-    steps = (abs(degree) * s->_steps_per_revolution * s->_microsteps) / 360;
+    // TODO: Why does only 256 yield a full rotation?
+    steps = (abs(degree) * s->_steps_per_revolution * 256) / 360;
     dir   = (degree > 0) ? TMC2209_CW : TMC2209_CCW;
 
     tmc2209_step(s, steps, dir);
@@ -358,6 +364,15 @@ void tmc2209_vactual(tmc2209_t *s, int32_t speed)
 
     TMC2209_REGISTER_VAL(s->_vactual, 0, VACTUAL_SIZE, speed);
     register_write(s, VACTUAL_ADDRESS, s->_vactual);
+}
+
+uint16_t tmc2209_mscnt(tmc2209_t *s)
+{
+    if (s == NULL) return 0;
+    if (!s->_communicating) return 0;
+
+    s->_mscnt = register_read(s, MSCNT_ADDRESS) & MSCNT_BITMASK;
+    return s->_mscnt;
 }
 
 void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold)
@@ -579,12 +594,15 @@ uint8_t calc_crc(uint8_t datagram[], uint8_t len)
 void step_task(void *stepper)
 {
     tmc2209_t *s = (tmc2209_t *)stepper;
-    for (s->_step = 0; s->_step < s->_steps; s->_step++) {
-        digitalWrite(s->_step_pin, HIGH);
-        delayMicroseconds(s->_step_delay);
-        digitalWrite(s->_step_pin, LOW);
-        delayMicroseconds(s->_step_delay);
-    }
+    while(1) {
+        if (s->_step < s->_steps) {
+            s->_step++;
 
+            digitalWrite(s->_step_pin, HIGH);
+            delayMicroseconds(s->_step_delay);
+            digitalWrite(s->_step_pin, LOW);
+            delayMicroseconds(s->_step_delay);
+        } else delay(1);
+    }
     vTaskDelete(NULL);
 }

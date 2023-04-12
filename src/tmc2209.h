@@ -160,6 +160,9 @@ void tmc2209_sedn(tmc2209_t *s, uint8_t val);
 // set the motor speed via UART
 void tmc2209_vactual(tmc2209_t *s, int32_t speed);
 
+// get the current position int the microstep table 0..1023
+uint16_t tmc2209_mscnt(tmc2209_t *s);
+
 // set stallguard threshold
 void tmc2209_stallguard_thrs(tmc2209_t *s, uint8_t threshold);
 
