@@ -601,10 +601,10 @@ void step_task(void *stepper)
 
             digitalWrite(s->_step_pin, HIGH);
             prevmicros = micros();
-            while (micros() - prevmicros > s->_step_delay) yield();
+            while (micros() - prevmicros < s->_step_delay) yield();
             digitalWrite(s->_step_pin, LOW);
             prevmicros = micros();
-            while (micros() - prevmicros > s->_step_delay) yield();
+            while (micros() - prevmicros < s->_step_delay) yield();
 
         } else delay(10);
     }
