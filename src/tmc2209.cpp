@@ -63,7 +63,7 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
 
     // Create step task for accurate stepping
     TaskHandle_t step_task_handle;
-    xTaskCreatePinnedToCore(step_task, "Step Task", 10000, (void *)s, 0, &step_task_handle, 0);
+    xTaskCreatePinnedToCore(step_task, "Step Task", 10000, (void *)s, 999, &step_task_handle, 0);
 
     // initialize UART
     if (!serial_initialized) {
