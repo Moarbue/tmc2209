@@ -62,7 +62,8 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     digitalWrite(s->_en_pin, LOW);
 
     // Create step task for accurate stepping
-    xTaskCreate(step_task, "Step Task", 10000, (void *)s, 1, NULL);
+    TaskHandle_t step_task_handle;
+    xTaskCreatePinnedToCore(step_task, "Step Task", 10000, (void *)s, 0, &step_task_handle, 0);
 
     // initialize UART
     if (!serial_initialized) {
@@ -153,7 +154,7 @@ void tmc2209_set_direction(tmc2209_t *s, tmc2209_direction dir)
 {
     if (s == NULL) return;
 
-    if (dir != TMC2209_CW || dir != TMC2209_CCW) return;
+    if (dir != TMC2209_CW && dir != TMC2209_CCW) return;
 
     if (s->_communicating) {
         TMC2209_REGISTER_VAL(s->_gconf, GCONF_SHAFT, 1, s->_dir);
@@ -181,7 +182,6 @@ void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
     tmc2209_set_direction(s, dir);
     s->_step  = 0;
     s->_steps = steps;
-
 }
 
 void tmc2209_step_reset(tmc2209_t *s)
@@ -597,12 +597,16 @@ void step_task(void *stepper)
     while(1) {
         if (s->_step < s->_steps) {
             s->_step++;
+            unsigned long prevmicros;
 
             digitalWrite(s->_step_pin, HIGH);
-            delayMicroseconds(s->_step_delay);
+            prevmicros = micros();
+            while (micros() - prev > s->_step_delay) yield();
             digitalWrite(s->_step_pin, LOW);
-            delayMicroseconds(s->_step_delay);
-        } else delay(1);
+            prevmicros = micros();
+            while (micros() - prev > s->_step_delay) yield();
+
+        } else delay(10);
     }
     vTaskDelete(NULL);
 }
