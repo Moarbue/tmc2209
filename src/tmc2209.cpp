@@ -97,7 +97,6 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
 {
     if (s == NULL) return;
 
-    // TODO: Implement Error Reporting
     if (microsteps != TMC2209_MICROSTEPS_NONE &&
         microsteps != TMC2209_MICROSTEPS_2    && microsteps != TMC2209_MICROSTEPS_4  &&
         microsteps != TMC2209_MICROSTEPS_8    && microsteps != TMC2209_MICROSTEPS_16 &&
@@ -211,7 +210,6 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     uint32_t steps;
     bool dir;
 
-    // TODO: Why does only 256 yield a full rotation?
     steps = (abs(degree) * s->_steps_per_revolution * 256) / 360;
     dir   = (degree > 0); // Clockwise = true, Counterclockwise = false
 
@@ -283,7 +281,7 @@ void tmc2209_blank_time(tmc2209_t *s, uint8_t clock_cycles)
     register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
 }
 
-void tmc2209_rms_current(tmc2209_t *s, uint16_t mA)
+void tmc2209_rms_current(tmc2209_t *s, uint16_t mA, double hold_percentage)
 {
     if (s == NULL) return;
     if (!s->_communicating) return;
@@ -309,8 +307,7 @@ void tmc2209_rms_current(tmc2209_t *s, uint16_t mA)
     CS = CS > 31 ? 31 : CS;
 
     TMC2209_REGISTER_VAL(s->_ihold_irun, IHOLD_IRUN_IRUN,  5, CS);
-    // TODO: Add option to specify ihold percentage
-    TMC2209_REGISTER_VAL(s->_ihold_irun, IHOLD_IRUN_IHOLD, 5, (uint8_t)(CS * 0.7));
+    TMC2209_REGISTER_VAL(s->_ihold_irun, IHOLD_IRUN_IHOLD, 5, (uint8_t)(CS * hold_percentage));
     register_write(s, IHOLD_IRUN_ADDRESS, s->_ihold_irun);
 }
 
