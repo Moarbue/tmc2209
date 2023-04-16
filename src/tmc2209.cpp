@@ -1,9 +1,10 @@
 #include "tmc2209.h"
+#include "driver/rmt.h"
 
-#define MAX_STEPPER_COUNT RMT
-#define INITIALIZE_RMT(rmt, channel, step_pin) do {                      \
+#define MAX_STEPPER_COUNT RMT_CHANNEL_MAX
+#define INITIALIZE_RMT(rmt, ch, step_pin) do {                  \
     (rmt).rmt_mode = RMT_MODE_TX;                               \
-    (rmt).channel = (rmt_channel_t)(channel);               \
+    (rmt).channel = (rmt_channel_t)(ch);                        \
     (rmt).gpio_num = (gpio_num_t) (step_pin);                   \
     (rmt).mem_block_num = 1;                                    \
     (rmt).tx_config.loop_en = 0;                                \
@@ -12,8 +13,8 @@
     (rmt).tx_config.idle_level = RMT_IDLE_LEVEL_LOW;            \
     (rmt).tx_config.carrier_level = RMT_CARRIER_LEVEL_HIGH;     \
     (rmt).clk_div = 80;                                         \
-    rmt_config(&(rmt));
-    rmt_driver_install((rmt_channel_t)(channel), 0, 0);
+    rmt_config(&(rmt));                                         \
+    rmt_driver_install((rmt_channel_t)(ch), 0, 0);              \
     } while(0)
 
 typedef enum {
@@ -87,7 +88,7 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     steppers = (tmc2209_t **) realloc(steppers, (stepper_count + 1) * sizeof (tmc2209_t *));
     steppers[stepper_count] = s;
     rmts = (rmt_config_t *) realloc(rmts, (stepper_count + 1) * sizeof (rmt_config_t));
-    INITIALIZE_RMT(rmts[stepper_count], stepper_count, s->_step_pin]);
+    INITIALIZE_RMT(rmts[stepper_count], stepper_count, s->_step_pin);
 
     // register tx_end callback once
     if (stepper_count == 0) rmt_register_tx_end_callback(update_stepper, NULL);
