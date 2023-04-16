@@ -105,6 +105,7 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
     s->_microsteps = microsteps;
 
     if (s->_communicating) {
+        // TODO: microsteps must be transmitted in binary
         TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_MRES, 4, microsteps);
         register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
     } else {
@@ -150,11 +151,13 @@ uint32_t tmc2209_get_step_delay(tmc2209_t *s)
     return s->_step_delay;
 }
 
-void tmc2209_set_direction(tmc2209_t *s, tmc2209_direction dir)
+void tmc2209_set_direction(tmc2209_t *s, bool dir)
 {
     if (s == NULL) return;
 
     if (dir != TMC2209_CW && dir != TMC2209_CCW) return;
+
+    s->_dir = dir;
 
     if (s->_communicating) {
         TMC2209_REGISTER_VAL(s->_gconf, GCONF_SHAFT, 1, s->_dir);
@@ -163,14 +166,14 @@ void tmc2209_set_direction(tmc2209_t *s, tmc2209_direction dir)
         digitalWrite(s->_dir_pin, s->_dir);
 }
 
-tmc2209_direction tmc2209_get_direction(tmc2209_t *s)
+bool tmc2209_get_direction(tmc2209_t *s)
 {
     if (s == NULL) return TMC2209_CCW;
 
     return s->_dir; 
 }
 
-void tmc2209_step(tmc2209_t *s, uint32_t steps, tmc2209_direction dir)
+void tmc2209_step(tmc2209_t *s, uint32_t steps, bool dir)
 {
     if (s == NULL) return;
 
@@ -203,11 +206,11 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     if (s == NULL) return;
 
     uint32_t steps;
-    tmc2209_direction dir;
+    bool dir;
 
     // TODO: Why does only 256 yield a full rotation?
     steps = (abs(degree) * s->_steps_per_revolution * 256) / 360;
-    dir   = (degree > 0) ? TMC2209_CW : TMC2209_CCW;
+    dir   = (degree > 0); // Clockwise = true, Counterclockwise = false
 
     tmc2209_step(s, steps, dir);
 }
