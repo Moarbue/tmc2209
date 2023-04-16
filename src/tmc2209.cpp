@@ -127,7 +127,9 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
                 digitalWrite(s->_ms1_pin, LOW);
                 digitalWrite(s->_ms2_pin, HIGH);
             break;
+            default:
             // NOTE: None, 2, 4, 128 and 256 microsteps are not supported in legacy mode
+            break;
         }
     }
 }
@@ -210,7 +212,9 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     uint32_t steps;
     bool dir;
 
-    steps = (abs(degree) * s->_steps_per_revolution * 256) / 360;
+    // microsteps go from 0 (256) to 8 (0) in power of two steps
+    // 1 << (8 - 0) = 256, 1 << (8 - 1) = 128, ...
+    steps = (abs(degree) * s->_steps_per_revolution * (1 << (8 - s->_microsteps))) / 360;
     dir   = (degree > 0); // Clockwise = true, Counterclockwise = false
 
     tmc2209_step(s, steps, dir);
