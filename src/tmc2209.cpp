@@ -184,7 +184,7 @@ void tmc2209_set_step_delay(tmc2209_t *s, uint32_t step_delay_us)
     if (s == NULL) return;
 
     uint32_t step_delay = step_delay_us < STEP_DELAY_MIN ? STEP_DELAY_MIN : 
-                         (step_delay_us > STEP_DELAY_MAX ? : STEP_DELAY_MAX : step_delay_us);
+                         (step_delay_us > STEP_DELAY_MAX ? STEP_DELAY_MAX : step_delay_us);
     s->_step_delay = step_delay;
 }
 
@@ -276,7 +276,7 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     uint32_t steps;
     bool dir;
 
-    steps = (abs(degree) * s->_steps_per_revolution * MICROSTEPS_TO_NUMBER(s->_microsteps))) / 360;
+    steps = (abs(degree) * s->_steps_per_revolution * MICROSTEPS_TO_NUMBER(s->_microsteps)) / 360;
     dir   = (degree > 0); // Clockwise = true, Counterclockwise = false
 
     tmc2209_step(s, steps, dir);
