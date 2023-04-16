@@ -98,15 +98,17 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
     if (s == NULL) return;
 
     // TODO: Implement Error Reporting
-    if (microsteps != TMC2209_MICROSTEPS_8  || microsteps != TMC2209_MICROSTEPS_16 ||
-        microsteps != TMC2209_MICROSTEPS_32 || microsteps != TMC2209_MICROSTEPS_64)
+    if (microsteps != TMC2209_MICROSTEPS_NONE &&
+        microsteps != TMC2209_MICROSTEPS_2    && microsteps != TMC2209_MICROSTEPS_4  &&
+        microsteps != TMC2209_MICROSTEPS_8    && microsteps != TMC2209_MICROSTEPS_16 &&
+        microsteps != TMC2209_MICROSTEPS_32   && microsteps != TMC2209_MICROSTEPS_64 &&
+        microsteps != TMC2209_MICROSTEPS_128  && microsteps != TMC2209_MICROSTEPS_256)
         return;
 
     s->_microsteps = microsteps;
 
     if (s->_communicating) {
-        // TODO: microsteps must be transmitted in binary
-        TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_MRES, 4, microsteps);
+        TMC2209_REGISTER_VAL(s->_chopconf, CHOPCONF_MRES, 4, s->_microsteps);
         register_write(s, CHOPCONF_ADDRESS, s->_chopconf);
     } else {
         switch (s->_microsteps) {
@@ -126,6 +128,7 @@ void tmc2209_set_microsteps(tmc2209_t *s, tmc2209_microstep microsteps)
                 digitalWrite(s->_ms1_pin, LOW);
                 digitalWrite(s->_ms2_pin, HIGH);
             break;
+            // NOTE: None, 2, 4, 128 and 256 microsteps are not supported in legacy mode
         }
     }
 }
