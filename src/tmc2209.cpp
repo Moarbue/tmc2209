@@ -17,6 +17,10 @@
     rmt_driver_install((rmt_channel_t)(ch), 0, 0);              \
     } while(0)
 
+// microsteps go from 0 (256) to 8 (0) in power of two steps
+// 1 << (8 - 0) = 256, 1 << (8 - 1) = 128, ...
+#define MICROSTEPS_TO_NUMBER(msteps) (1 << (8 - msteps))
+
 typedef enum {
     TMC2209_MASK_WRITE = 0x80,
     TMC2209_MASK_READ  = 0x00,
@@ -29,6 +33,10 @@ typedef enum {
 
 #define TOFF_DEFAULT 3
 #define TBLANK_DEFAULT 0b01 // 24 clock cycles
+
+// TODO: actually test these values
+#define STEP_DELAY_MIN 150
+#define STEP_DELAY_MAX 2000000
 
 static bool serial_initialized = false;
 HardwareSerial s_serial(TMC2209_DEFAULT_SERIAL);
@@ -175,7 +183,9 @@ void tmc2209_set_step_delay(tmc2209_t *s, uint32_t step_delay_us)
 {
     if (s == NULL) return;
 
-    s->_step_delay = step_delay_us;
+    uint32_t step_delay = step_delay_us < STEP_DELAY_MIN ? STEP_DELAY_MIN : 
+                         (step_delay_us > STEP_DELAY_MAX ? : STEP_DELAY_MAX : step_delay_us);
+    s->_step_delay = step_delay;
 }
 
 uint32_t tmc2209_get_step_delay(tmc2209_t *s)
@@ -183,6 +193,16 @@ uint32_t tmc2209_get_step_delay(tmc2209_t *s)
     if (s == NULL) return TMC2209_DEFAULT_STEP_DELAY;
 
     return s->_step_delay;
+}
+
+void tmc2209_set_rpm(tmc2209_t *s, uint16_t rpm)
+{
+    if (s == NULL) return;
+
+    // step_delay * 2 * spr * microsteps = 1 rotation
+    uint32_t step_delay = 60000000L / (rpm * s->_steps_per_revolution * MICROSTEPS_TO_NUMBER(s->_microsteps));
+
+    tmc2209_set_step_delay(s, step_delay);
 }
 
 void tmc2209_set_direction(tmc2209_t *s, bool dir)
@@ -256,9 +276,7 @@ void tmc2209_rotate(tmc2209_t *s, int32_t degree)
     uint32_t steps;
     bool dir;
 
-    // microsteps go from 0 (256) to 8 (0) in power of two steps
-    // 1 << (8 - 0) = 256, 1 << (8 - 1) = 128, ...
-    steps = (abs(degree) * s->_steps_per_revolution * (1 << (8 - s->_microsteps))) / 360;
+    steps = (abs(degree) * s->_steps_per_revolution * MICROSTEPS_TO_NUMBER(s->_microsteps))) / 360;
     dir   = (degree > 0); // Clockwise = true, Counterclockwise = false
 
     tmc2209_step(s, steps, dir);

@@ -110,6 +110,9 @@ void tmc2209_set_step_delay(tmc2209_t *s, uint32_t step_delay_us);
 // get the step delay between one high/low pulse in µs
 uint32_t tmc2209_get_step_delay(tmc2209_t *s);
 
+// set the rotations per minute
+void tmc2209_set_rpm(tmc2209_t *s, uint16_t rpm);
+
 // set the spin-direction of the motor
 void tmc2209_set_direction(tmc2209_t *s, bool dir);
 // get the spin-direction of the motor
