@@ -1,5 +1,21 @@
 #include "tmc2209.h"
 
+#define MAX_STEPPER_COUNT RMT
+#define INITIALIZE_RMT(rmt, channel, step_pin) do {                      \
+    (rmt).rmt_mode = RMT_MODE_TX;                               \
+    (rmt).channel = (rmt_channel_t)(channel);               \
+    (rmt).gpio_num = (gpio_num_t) (step_pin);                   \
+    (rmt).mem_block_num = 1;                                    \
+    (rmt).tx_config.loop_en = 0;                                \
+    (rmt).tx_config.carrier_en = 0;                             \
+    (rmt).tx_config.idle_output_en = 1;                         \
+    (rmt).tx_config.idle_level = RMT_IDLE_LEVEL_LOW;            \
+    (rmt).tx_config.carrier_level = RMT_CARRIER_LEVEL_HIGH;     \
+    (rmt).clk_div = 80;                                         \
+    rmt_config(&(rmt));
+    rmt_driver_install((rmt_channel_t)(channel), 0, 0);
+    } while(0)
+
 typedef enum {
     TMC2209_MASK_WRITE = 0x80,
     TMC2209_MASK_READ  = 0x00,
@@ -16,12 +32,16 @@ typedef enum {
 static bool serial_initialized = false;
 HardwareSerial s_serial(TMC2209_DEFAULT_SERIAL);
 
+static uint8_t stepper_count = 0;
+static tmc2209_t **steppers = NULL;
+static rmt_config_t *rmts = NULL;
+
 // helper functions declaration
 void set_address(tmc2209_t *s, tmc2209_address address);
 void register_write(tmc2209_t *s, uint8_t address, uint32_t val);
 uint32_t register_read(tmc2209_t *s, uint8_t address);
 uint8_t calc_crc(uint8_t datagram[], uint8_t len);
-void step_task(void *stepper);
+void update_stepper(rmt_channel_t channel, void *arg);
 
 bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pin,
                                       uint8_t rx_pin, uint8_t tx_pin,  uint8_t ms1_pin, uint8_t ms2_pin,
@@ -61,9 +81,18 @@ bool tmc2209_full(tmc2209_t *s, uint8_t en_pin, uint8_t dir_pin, uint8_t step_pi
     // enable driver
     digitalWrite(s->_en_pin, LOW);
 
-    // Create step task for accurate stepping
-    TaskHandle_t step_task_handle;
-    xTaskCreatePinnedToCore(step_task, "Step Task", 10000, (void *)s, 999, &step_task_handle, 0);
+    // check if all rmt channels have been used
+    assert((stepper_count < MAX_STEPPER_COUNT) && "Cannot create more stepper motor instances! No RMT-Channels left");
+    // allocate memory for stepper and rmt and initialize them
+    steppers = (tmc2209_t **) realloc(steppers, (stepper_count + 1) * sizeof (tmc2209_t *));
+    steppers[stepper_count] = s;
+    rmts = (rmt_config_t *) realloc(rmts, (stepper_count + 1) * sizeof (rmt_config_t));
+    INITIALIZE_RMT(rmts[stepper_count], stepper_count, s->_step_pin]);
+
+    // register tx_end callback once
+    if (stepper_count == 0) rmt_register_tx_end_callback(update_stepper, NULL);
+
+    stepper_count++;
 
     // initialize UART
     if (!serial_initialized) {
@@ -189,6 +218,20 @@ void tmc2209_step(tmc2209_t *s, uint32_t steps, bool dir)
     tmc2209_set_direction(s, dir);
     s->_step  = 0;
     s->_steps = steps;
+
+    rmt_item32_t pulse;
+    pulse.duration0 = s->_step_delay;
+    pulse.level0    = 1;
+    pulse.duration1 = s->_step_delay;
+    pulse.level1    = 0;
+    
+    for (uint8_t i = 0; i < MAX_STEPPER_COUNT; i++) {
+        if (steppers[i] == s) {
+            rmt_tx_start((rmt_channel_t)i, true);
+            rmt_write_items((rmt_channel_t)i, &pulse, 1, false);
+            break;
+        }
+    }
 }
 
 void tmc2209_step_reset(tmc2209_t *s)
@@ -598,22 +641,18 @@ uint8_t calc_crc(uint8_t datagram[], uint8_t len)
 	return crc;
 }
 
-void step_task(void *stepper)
+void update_stepper(rmt_channel_t channel, void *arg)
 {
-    tmc2209_t *s = (tmc2209_t *)stepper;
-    while(1) {
-        if (s->_step < s->_steps) {
-            s->_step++;
-            unsigned long prevmicros;
+    tmc2209_t *s = steppers[(uint8_t)channel];
 
-            digitalWrite(s->_step_pin, HIGH);
-            prevmicros = micros();
-            while (micros() - prevmicros < s->_step_delay) yield();
-            digitalWrite(s->_step_pin, LOW);
-            prevmicros = micros();
-            while (micros() - prevmicros < s->_step_delay) yield();
-
-        } else delay(10);
+    if (s->_step < s->_steps) {
+        s->_step++;
+        rmt_item32_t pulse;
+        pulse.duration0 = s->_step_delay;
+        pulse.level0    = 1;
+        pulse.duration1 = s->_step_delay;
+        pulse.level1    = 0;
+        rmt_write_items(channel, &pulse, 1, false);
     }
-    vTaskDelete(NULL);
+    else rmt_tx_stop(channel);
 }
