@@ -266,7 +266,7 @@ bool tmc2209_step_is_idle(tmc2209_t *s)
 {
     if (s == NULL) return true;
 
-    return (s->_step < s->_steps);
+    return (s->_step >= s->_steps);
 }
 
 void tmc2209_rotate(tmc2209_t *s, int32_t degree)
